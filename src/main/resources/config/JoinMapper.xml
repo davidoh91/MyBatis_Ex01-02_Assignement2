@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="joinMapper">
+
+    <!--  1-1  -->
+    <resultMap type="empDTO" id="associationMap1">
+        <id column="empno" property="empNo"/>
+        <result column="ename" property="eName"/>
+        <result column="job" property="job"/>
+        <result column="sal" property="sal"/>
+
+        <!-- here, property = field name from the association master's POV -->
+        <association property="deptDTO" javaType="deptDTO">
+            <id column="deptno" property="deptNo"/>
+            <result column="dname" property="dName"/>
+            <result column="loc" property="loc"/>
+        </association>
+    </resultMap>
+
+    <select id="selectEmpAndDept" parameterType="int" resultMap="associationMap1">
+        select e.empno, e.ename, e.job, e.sal, d.deptno, d.dname, d.loc
+        from emp e join dept d
+        on e.deptno = d.deptno
+
+        <!-- add dynamic query : if the param empNo is present, add where -->
+        <if test="empNo!=0">
+            where empno=#{_parameter}
+        </if>
+    </select>
+
+
+    <!--  1-2  -->
+    <resultMap type="deptDTO" id="collectionMap1">
+        <id column="deptno" property="deptNo"/>
+        <result column="dname" property="dName"/>
+        <result column="loc" property="loc"/>
+
+        <!--
+            here, property = field name from the collection master's POV
+            also... *** fill the ~DTOList field member with <ofType="~DTO"> NOT <javaType="~DTO">
+        -->
+        <collection property="empDTOList" ofType="empDTO">
+            <id column="empno" property="empNo"/>
+            <result column="ename" property="eName"/>
+            <result column="job" property="job"/>
+            <result column="sal" property="sal"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectDeptAndEmp" resultMap="collectionMap1">
+        select deptno, dname, loc, empno, ename, job, sal
+        from dept join emp
+        using(deptno)
+    </select>
+
+
+    <!-- 2-1 -->
+    <resultMap type="empDTO" id="associationMap2">
+        <id column="empno" property="empNo"/>
+        <result column="ename" property="eName"/>
+        <result column="job" property="job"/>
+        <result column="sal" property="sal"/>
+
+        <association property="salGradeDTO" javaType="salGradeDTO">
+            <id column="grade" property="grade"/>
+            <result column="losal" property="loSal"/>
+            <result column="hiSal" property="hiSal"/>
+        </association>
+    </resultMap>
+
+    <select id="selectEmpAndSalGrade" resultMap="associationMap2">
+        SELECT e.empno, e.ename, e.job, e.sal, s.grade, s.losal, s.hisal
+        FROM emp e JOIN salgrade s
+        ON e.sal BETWEEN s.losal AND s.hisal
+    </select>
+
+    <!-- 2-2 -->
+    <resultMap type="salGradeDTO" id="collectionMap2">
+        <id column="grade" property="grade"/>
+        <result column="losal" property="loSal"/>
+        <result column="hisal" property="hiSal"/>
+
+        <collection property="empDTOList" ofType="empDTO">
+            <id column="empno" property="empNo"/>
+            <result column="ename" property="eName"/>
+            <result column="job" property="job"/>
+            <result column="sal" property="sal"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectSalGradeAndEmp" resultMap="collectionMap2">
+        select s.grade, s.losal, s.hisal, e.empno, e.ename, e.job, e.sal
+        from salgrade s join emp e
+        on e.sal between s.losal and s.hisal
+    </select>
+
+
+
+</mapper>
